@@ -17,6 +17,7 @@
 
 // Include header file that defines the fonts loaded and the pins to be used
 #include <User_Setup.h>
+#include <BackBuffer.h>
 
 // Stop fonts etc being loaded multiple times
 #ifndef _TFT_HX8357H_
@@ -339,6 +340,9 @@ class TFT_HX8357
            textWidth(char *string, int16_t font),
            fontHeight(int16_t font);
 
+   void    setBackBuffer(BackBuffer *buffer);
+   void    presentBuffer();
+		   
 //#ifdef PRINT_CLASS 
   virtual  size_t write(uint8_t c);
 //#endif
@@ -348,7 +352,8 @@ class TFT_HX8357
     void  setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
 
   uint8_t  tabcolor;
-
+  BackBuffer* backbuffer = NULL;
+  
  protected:
 
   int16_t  _width, _height,           // Display w/h as modified by current rotation

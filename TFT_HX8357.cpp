@@ -35,7 +35,7 @@
 
  ****************************************************/
 
-#include "TFT_HX8357.h"
+#include <TFT_HX8357.h>
 
 #include <avr/pgmspace.h>
 
@@ -120,6 +120,35 @@ TFT_HX8357::TFT_HX8357(int16_t w, int16_t h)
 #ifdef LOAD_GFXFF
   gfxFont   = NULL; // Set the font to the GLCD
 #endif
+}
+
+void TFT_HX8357::setBackBuffer(BackBuffer *buffer)
+{
+	backbuffer = buffer;
+}
+   
+void TFT_HX8357::presentBuffer()
+{
+	if (backbuffer != NULL)
+	{
+		uint16_t* bufferData = backbuffer->getBuffer();
+		
+		setWindow(backbuffer->getX(), backbuffer->getY(), backbuffer->getX() + backbuffer->getWidth() - 1,  backbuffer->getY() + backbuffer->getHeight() - 1);
+		
+		int size = backbuffer->getWidth() * backbuffer->getHeight();
+				
+		while (size > 0)
+		{
+			int dSize = size > 200 ? 200 : size;
+			pushColors(bufferData, dSize);
+			bufferData += dSize;
+			size -= dSize;
+		}
+		
+		
+		
+		backbuffer = NULL;
+	}
 }
 
 /***************************************************************************************
@@ -644,6 +673,12 @@ void TFT_HX8357::fillEllipse(int16_t x0, int16_t y0, int16_t rx, int16_t ry, uin
 ***************************************************************************************/
 void TFT_HX8357::fillScreen(uint16_t color)
 {
+	if (backbuffer != NULL)
+	{
+		backbuffer->fillScreen(color);
+		return;
+	}
+	
   fillRect(0, 0, _width, _height, color);
 }
 
@@ -1384,6 +1419,12 @@ void TFT_HX8357::drawPixel(uint16_t x, uint16_t y, uint16_t color)
   // Faster range checking, possible because x and y are unsigned
   if ((x >= _width) || (y >= _height)) return;
 
+	if (backbuffer != NULL)
+	{
+		backbuffer->drawPixel(x, y, color);
+		return;
+	}
+  
   CSL_RSL_WRL;  PORTC = HX8357_CASET; WR_H; CSL_RSH_WRL;
   PORTC = x>>8; WR_H;
   PORTC = x; WR_STB;
@@ -1501,6 +1542,12 @@ void TFT_HX8357::pushColors(uint8_t *data, uint16_t len)
 
 void TFT_HX8357::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color)
 {
+	if (backbuffer != NULL)
+	{
+		backbuffer->drawLine(x0, y0, x1, y1, color);
+		return;
+	}
+	
   boolean steep = abs(y1 - y0) > abs(x1 - x0);
   if (steep) {
     swap(x0, y0);
@@ -1618,6 +1665,12 @@ void TFT_HX8357::drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color)
   if ((y + h - 1) >= _height) h = _height - y;
 #endif
 
+	if (backbuffer != NULL)
+	{
+		backbuffer->drawFastVLine(x, y, h, color);
+		return;
+	}
+
 #ifdef FAST_RS
   CSL_RSL_WRL;  PORTC = HX8357_CASET; WR_H; CSL_RSH_WRL;
   PORTC = x>>8; WR_H;
@@ -1668,6 +1721,12 @@ void TFT_HX8357::drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color)
   if ((x >= _width) || (y >= _height)) return;
   if ((x + w - 1) >= _width)  w = _width - x;
 #endif
+
+	if (backbuffer != NULL)
+	{
+		backbuffer->drawFastHLine(x, y, w, color);
+		return;
+	}
 
 #ifdef FAST_RS
   CSL_RSL_WRL;  PORTC = HX8357_CASET; WR_H; CSL_RSH_WRL;
@@ -1720,6 +1779,12 @@ void TFT_HX8357::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t c
   if ((x + w - 1) >= _width)  w = _width  - x;
   if ((y + h - 1) >= _height) h = _height - y;
 #endif
+
+	if (backbuffer != NULL)
+	{
+		backbuffer->fillRect(x, y, w, h, color);
+		return;
+	}
 
   setAddrWindow(x, y, x+w-1, y+h-1);
   
